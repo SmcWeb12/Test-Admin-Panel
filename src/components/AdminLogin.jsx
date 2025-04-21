@@ -6,7 +6,7 @@ const AdminLogin = ({ onLogin }) => {
 
   const handleLogin = () => {
     // Replace this with your actual authentication logic
-    if (username === "admin" && password === "password") {
+    if (username === "admin" && password === "mukeshsir") {
       onLogin(); // Successful login
     } else {
       alert("Invalid credentials!");
