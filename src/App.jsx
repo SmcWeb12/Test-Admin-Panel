@@ -5,6 +5,7 @@ import AdminResults from "./components/AdminResults";
 import DisclaimerEditor from "./components/DisclaimerEditor";
 import QuestionList from "./components/QuestionList";
 import AdminLogin from "./components/AdminLogin";
+import AddLivePage from "./components/AddLivePage"; // ✅ import live page
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,6 +25,8 @@ function App() {
         return <DisclaimerEditor />;
       case "questions":
         return <QuestionList />;
+      case "live":
+        return <AddLivePage />; // ✅ add live page here
       default:
         return <AdminResults />;
     }
