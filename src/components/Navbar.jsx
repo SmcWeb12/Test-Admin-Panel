@@ -34,6 +34,14 @@ const Navbar = ({ setActivePage }) => {
           >
             Manage Questions
           </button>
+
+          {/* ✅ Live Class Button */}
+          <button
+            onClick={() => setActivePage("live")}
+            className="hover:bg-red-700 bg-red-600 py-2 px-4 rounded"
+          >
+            Live Class
+          </button>
         </div>
 
         {/* Mobile Menu Button */}
@@ -71,6 +79,14 @@ const Navbar = ({ setActivePage }) => {
             className="block w-full text-left py-2 px-4 bg-blue-700 rounded"
           >
             Manage Questions
+          </button>
+
+          {/* ✅ Live Class Button (Mobile) */}
+          <button
+            onClick={() => setActivePage("live")}
+            className="block w-full text-left py-2 px-4 bg-red-600 rounded"
+          >
+            Live Class
           </button>
         </div>
       )}
