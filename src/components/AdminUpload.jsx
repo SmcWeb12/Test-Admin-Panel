@@ -10,11 +10,11 @@ const AdminUpload = () => {
   const [seconds, setSeconds] = useState(0);
   const [timerSuccess, setTimerSuccess] = useState(false);
 
-  const [questions, setQuestions] = useState([]); // multiple questions
+  const [questions, setQuestions] = useState([]); 
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Timer Save
+  // Save Timer
   const handleTimerSubmit = async (e) => {
     e.preventDefault();
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
@@ -30,7 +30,7 @@ const AdminUpload = () => {
     }
   };
 
-  // Multiple Image Select
+  // Multiple Images Select
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const newQuestions = files.map((file) => ({
@@ -48,7 +48,7 @@ const AdminUpload = () => {
     setQuestions(updated);
   };
 
-  // Upload All Questions
+  // Upload All
   const handleUploadAll = async () => {
     if (questions.length === 0) return alert("Please select at least one question!");
 
@@ -70,7 +70,7 @@ const AdminUpload = () => {
       }
 
       setSuccess(true);
-      setQuestions([]); // reset after upload
+      setQuestions([]);
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Some questions failed to upload. Try again.");
@@ -80,15 +80,15 @@ const AdminUpload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-12 px-6">
-      <div className="max-w-7xl mx-auto grid gap-10 grid-cols-1 lg:grid-cols-2">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-6 px-4">
+      <div className="max-w-5xl mx-auto grid gap-8 grid-cols-1 lg:grid-cols-2">
         {/* Timer Section */}
-        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-          <h2 className="text-3xl font-semibold mb-6 flex items-center gap-2">
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
             ⏱️ Set Test Timer
           </h2>
-          <form onSubmit={handleTimerSubmit} className="space-y-5">
-            <div className="grid grid-cols-3 gap-4">
+          <form onSubmit={handleTimerSubmit} className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
               <input
                 type="number"
                 value={hours}
@@ -116,7 +116,7 @@ const AdminUpload = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-2.5 rounded-lg text-lg font-medium"
+              className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-2.5 rounded-lg text-base font-medium"
             >
               Save Timer
             </button>
@@ -129,8 +129,8 @@ const AdminUpload = () => {
         </div>
 
         {/* Upload Section */}
-        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-          <h2 className="text-3xl font-semibold mb-6 flex items-center gap-2">
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 relative">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
             📤 Upload Multiple Questions
           </h2>
 
@@ -139,27 +139,27 @@ const AdminUpload = () => {
             accept="image/*"
             multiple
             onChange={handleImageChange}
-            className="input-style mb-6"
+            className="input-style mb-5"
           />
 
           {/* Preview Grid */}
           {questions.length > 0 && (
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 mb-6">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               {questions.map((q, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-gray-50 border rounded-lg shadow-sm"
+                  className="p-3 bg-gray-50 border rounded-lg shadow-sm flex flex-col"
                 >
                   <img
                     src={q.preview}
                     alt={`Preview ${index}`}
-                    className="w-full h-40 object-cover rounded-lg mb-3"
+                    className="w-full h-32 object-cover rounded-md mb-2"
                   />
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1">
                     {["A", "B", "C", "D"].map((opt) => (
                       <label
                         key={opt}
-                        className={`cursor-pointer px-2 py-1 border rounded-md text-center text-sm font-medium transition ${
+                        className={`cursor-pointer px-1 py-1 border rounded-md text-center text-sm font-medium transition ${
                           q.correctOption === opt
                             ? "bg-blue-100 border-blue-500 text-blue-800"
                             : "bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"
@@ -182,13 +182,18 @@ const AdminUpload = () => {
             </div>
           )}
 
-          <button
-            onClick={handleUploadAll}
-            disabled={uploading}
-            className="w-full bg-green-600 hover:bg-green-700 transition text-white py-2.5 rounded-lg text-lg font-medium"
-          >
-            {uploading ? "Uploading..." : "Upload All Questions"}
-          </button>
+          {/* Upload Button (Sticky in mobile) */}
+          {questions.length > 0 && (
+            <div className="mt-6 sticky bottom-0 left-0 right-0 bg-white py-3">
+              <button
+                onClick={handleUploadAll}
+                disabled={uploading}
+                className="w-full bg-green-600 hover:bg-green-700 transition text-white py-3 rounded-lg text-lg font-semibold shadow-md"
+              >
+                {uploading ? "Uploading..." : "Upload All Questions"}
+              </button>
+            </div>
+          )}
 
           {success && (
             <div className="text-green-600 text-center font-medium mt-4">
@@ -198,15 +203,15 @@ const AdminUpload = () => {
         </div>
       </div>
 
-      {/* Global Input Styles */}
+      {/* Input Style */}
       <style jsx>{`
         .input-style {
           background: #fff;
           border: 1px solid #d1d5db;
-          padding: 0.6rem 1rem;
+          padding: 0.6rem 0.8rem;
           border-radius: 0.5rem;
           width: 100%;
-          font-size: 1rem;
+          font-size: 0.95rem;
           color: #111827;
           transition: border 0.2s, box-shadow 0.2s;
         }
@@ -221,4 +226,3 @@ const AdminUpload = () => {
 };
 
 export default AdminUpload;
-
