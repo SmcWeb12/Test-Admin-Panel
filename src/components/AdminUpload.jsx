@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { db, storage } from "../firebase";
-import { setDoc, doc, addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, setDoc, doc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 
@@ -10,16 +10,14 @@ const AdminUpload = () => {
   const [seconds, setSeconds] = useState(0);
   const [timerSuccess, setTimerSuccess] = useState(false);
 
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState("");
-  const [correctOption, setCorrectOption] = useState("A");
+  const [questions, setQuestions] = useState([]); // multiple questions
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Timer Save
   const handleTimerSubmit = async (e) => {
     e.preventDefault();
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-
     try {
       await setDoc(doc(db, "settings", "timer"), { timer: totalSeconds });
       setTimerSuccess(true);
@@ -32,44 +30,58 @@ const AdminUpload = () => {
     }
   };
 
+  // Multiple Image Select
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files);
+    const newQuestions = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      correctOption: "A",
+    }));
+    setQuestions((prev) => [...prev, ...newQuestions]);
   };
 
-  const handleUpload = async () => {
-    if (!image) return alert("Please select an image!");
+  // Update Correct Option
+  const handleOptionChange = (index, option) => {
+    const updated = [...questions];
+    updated[index].correctOption = option;
+    setQuestions(updated);
+  };
+
+  // Upload All Questions
+  const handleUploadAll = async () => {
+    if (questions.length === 0) return alert("Please select at least one question!");
 
     setUploading(true);
     setSuccess(false);
 
     try {
-      const imageRef = ref(storage, `questions/${uuidv4()}`);
-      await uploadBytes(imageRef, image);
-      const imageUrl = await getDownloadURL(imageRef);
+      for (const q of questions) {
+        const imageRef = ref(storage, `questions/${uuidv4()}`);
+        await uploadBytes(imageRef, q.file);
+        const imageUrl = await getDownloadURL(imageRef);
 
-      await addDoc(collection(db, "questions"), {
-        imageUrl,
-        correctOption,
-        marks: 1,
-        createdAt: new Date(),
-      });
+        await addDoc(collection(db, "questions"), {
+          imageUrl,
+          correctOption: q.correctOption,
+          marks: 1,
+          createdAt: new Date(),
+        });
+      }
 
       setSuccess(true);
-      setImage(null);
-      setPreview("");
+      setQuestions([]); // reset after upload
     } catch (err) {
-      alert("Upload failed. Try again.");
-      console.error(err);
+      console.error("Upload failed:", err);
+      alert("Some questions failed to upload. Try again.");
     }
 
     setUploading(false);
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 py-12 px-6">
-      <div className="max-w-6xl mx-auto grid gap-10 grid-cols-1 md:grid-cols-2">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-12 px-6">
+      <div className="max-w-7xl mx-auto grid gap-10 grid-cols-1 lg:grid-cols-2">
         {/* Timer Section */}
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
           <h2 className="text-3xl font-semibold mb-6 flex items-center gap-2">
@@ -109,7 +121,7 @@ const AdminUpload = () => {
               Save Timer
             </button>
             {timerSuccess && (
-              <div className="text-green-600 text-center font-medium mt-2 flex justify-center items-center gap-1">
+              <div className="text-green-600 text-center font-medium mt-2">
                 ✅ Timer Saved Successfully!
               </div>
             )}
@@ -119,58 +131,68 @@ const AdminUpload = () => {
         {/* Upload Section */}
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
           <h2 className="text-3xl font-semibold mb-6 flex items-center gap-2">
-            📤 Upload Question
+            📤 Upload Multiple Questions
           </h2>
 
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageChange}
-            className="input-style mb-4"
+            className="input-style mb-6"
           />
 
-          {preview && (
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-auto rounded-xl shadow mb-4 border"
-            />
+          {/* Preview Grid */}
+          {questions.length > 0 && (
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 mb-6">
+              {questions.map((q, index) => (
+                <div
+                  key={index}
+                  className="p-4 bg-gray-50 border rounded-lg shadow-sm"
+                >
+                  <img
+                    src={q.preview}
+                    alt={`Preview ${index}`}
+                    className="w-full h-40 object-cover rounded-lg mb-3"
+                  />
+                  <div className="grid grid-cols-4 gap-2">
+                    {["A", "B", "C", "D"].map((opt) => (
+                      <label
+                        key={opt}
+                        className={`cursor-pointer px-2 py-1 border rounded-md text-center text-sm font-medium transition ${
+                          q.correctOption === opt
+                            ? "bg-blue-100 border-blue-500 text-blue-800"
+                            : "bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`correctOption-${index}`}
+                          value={opt}
+                          checked={q.correctOption === opt}
+                          onChange={() => handleOptionChange(index, opt)}
+                          className="hidden"
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
-          <div className="grid grid-cols-4 gap-3 mb-5">
-            {["A", "B", "C", "D"].map((opt) => (
-              <label
-                key={opt}
-                className={`cursor-pointer px-4 py-2 border rounded-lg text-center font-medium transition ${
-                  correctOption === opt
-                    ? "bg-blue-100 border-blue-500 text-blue-800"
-                    : "bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="correctOption"
-                  value={opt}
-                  checked={correctOption === opt}
-                  onChange={() => setCorrectOption(opt)}
-                  className="hidden"
-                />
-                {opt}
-              </label>
-            ))}
-          </div>
-
           <button
-            onClick={handleUpload}
+            onClick={handleUploadAll}
             disabled={uploading}
             className="w-full bg-green-600 hover:bg-green-700 transition text-white py-2.5 rounded-lg text-lg font-medium"
           >
-            {uploading ? "Uploading..." : "Upload Question"}
+            {uploading ? "Uploading..." : "Upload All Questions"}
           </button>
 
           {success && (
-            <div className="text-green-600 text-center font-medium mt-4 flex justify-center items-center gap-1">
-              ✅ Question Uploaded Successfully!
+            <div className="text-green-600 text-center font-medium mt-4">
+              ✅ All Questions Uploaded Successfully!
             </div>
           )}
         </div>
@@ -199,3 +221,4 @@ const AdminUpload = () => {
 };
 
 export default AdminUpload;
+
